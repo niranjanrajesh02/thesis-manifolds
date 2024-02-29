@@ -1,0 +1,5 @@
+1. Get a pretrained imagenet model
+2. Get CIFAR-10 dataset
+3. Extract neural representations of 2 class predictions
+4. Store reps as .npy or .csv
+5. Perform DR and analysis on each class's reps.
