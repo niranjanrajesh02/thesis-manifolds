@@ -1,11 +1,13 @@
 #! /bin/bash
 #PBS -N NR_Thesis
-#PBS -o /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/out.log
-#PBS -e /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/err.log
+#PBS -o /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/logs/out.log
+#PBS -e /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/logs/err.log
 #PBS -l ncpus=100
-#PBS -q gpu
+#PBS -q cpu
 
 rm -r /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/results
+rm -r /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/logs
+mkdir /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/logs
 mkdir /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/results
 
 
