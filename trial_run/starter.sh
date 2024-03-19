@@ -14,4 +14,4 @@ mkdir /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/logs
 source /apps/compilers/anaconda3/etc/profile.d/conda.sh
 conda activate cv
 
-python  /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/get_activations.py
+python  /home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/dim_red.py

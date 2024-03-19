@@ -19,8 +19,10 @@ def get_model(path='/home/niranjan.rajesh_asp24/pretrained_models/', model_name=
     model = keras.models.Model(inputs=base_model.input, outputs=head)
     return model
 
+
+
 def get_data():
-    train_ds, val_ds = get_cifar_subset()
+    train_ds, val_ds = get_cifar_subset(class_name='dog')
     return train_ds, val_ds
 
 def get_activations(model, ds):
@@ -28,6 +30,9 @@ def get_activations(model, ds):
     activations = []
     layer_counter = 0
     for layer in model.layers:
+
+        # looping through all conv layers in each block
+        # TODO: Add support for other CNN naming convention
         if ('block' in layer.name) and ('activation' in layer.name) and (not 'expand' in layer.name):
             print(f"Getting Activations for {layer.name}")
             intermediate_layer_model = keras.models.Model(inputs=model.input,
@@ -53,9 +58,7 @@ def get_activations(model, ds):
     print(f"Got activations for {layer_counter} layers")
     print(f"Activations shape {final_activations.shape}")
     
-    # flatten the activations
-    # activations = np.concatenate(activations, axis=1)
-    # print(f"Flattened activations shape {activations.shape}")
+    # outputs N x D matrix where N is the number of images and D is the number of features
     return final_activations
 
 if __name__ == '__main__':
@@ -67,10 +70,6 @@ if __name__ == '__main__':
     # model.fit(train_ds, epochs=1, validation_data=val_ds, verbose=1)
     
     # Get the activations
-    layer_name = 'final_dense'
-    intermediate_layer_model = keras.models.Model(inputs=model.input,
-                                                 outputs=model.get_layer(layer_name).output)
-    
     activations = get_activations(model, train_ds)
     # save activations
     np.save('/home/niranjan.rajesh_asp24/thesis-manifolds/trial_run/results/activations.npy', activations)
