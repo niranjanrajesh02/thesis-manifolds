@@ -12,6 +12,7 @@ def load_model():
     model.load_state_dict(torch.load(model_path)) # Load the model
     print("Model loaded")
     # print(model)
+    # print(model.children())
     return model
 
 if __name__ == "__main__":

@@ -42,11 +42,11 @@ def get_labels():
 
 
 class CAMdataset(Dataset):
-  def __init__(self, root_dir, class_id, transform=True):
+  def __init__(self, root_dir, class_ind, transform=True):
     self.root_dir = root_dir
     self.transform = r50_transforms
     self.images = os.listdir(root_dir)
-    self.class_id = class_id
+    self.class_index = class_ind
   
   def __len__(self):
     return len(self.images)
@@ -57,15 +57,15 @@ class CAMdataset(Dataset):
     if self.transform:
       image = self.transform(image)
 
-    return image, id_to_index(self.class_id)
+    return image, self.class_index
 
 
 def get_class_data(class_path, class_id):
-  class_ds = CAMdataset(class_path, class_id)
-  # dataloader
-  class_dl = DataLoader(class_ds, batch_size=32, shuffle=False)
-
-  return class_dl
+  class_index = id_to_index(class_id)
+  class_label = id_to_label(class_id)
+  class_ds = CAMdataset(class_path, class_index)
+  class_dl = DataLoader(class_ds, batch_size=1, shuffle=False)
+  return class_dl, class_label, class_index
 
 def get_classes():
   class_ids = os.listdir(data_path)
@@ -79,6 +79,11 @@ def id_to_index(class_id):
 def id_to_label(class_id):
   labels = get_labels()
   return [value["label"] for key,value in labels.items() if value["id"] == class_id][0]
+
+def index_to_label(class_index):
+  print(class_index)
+  labels = get_labels()
+  return [value["label"].split(",")[0] for key,value in labels.items() if int(key) == int(class_index)][0]
 
 if __name__ == "__main__":
   labels = get_labels()
