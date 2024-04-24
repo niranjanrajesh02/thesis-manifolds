@@ -11,13 +11,13 @@ load_dotenv()
 data_path = os.getenv("PICKLE_DATA_PATH")
 plot_path = os.getenv("PLOTS_PATH")
 
-def estimate_linear_dim_PCA(activations):
+def estimate_linear_dim_PCA(activations, threshold=0.95):
     pca = PCA()
     pca.fit(activations)
     # Find the number of components required to explain 95% of the variance
     var = np.cumsum(pca.explained_variance_ratio_)
     # print("Cumulative variance: ", var)
-    linear_dim = np.argmax(var > 0.95) + 1
+    linear_dim = np.argmax(var > threshold) + 1
     # print("Linear dimension: ", linear_dim)
     return linear_dim
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     with open(os.path.join(data_path, 'r50_class_activations.pkl'), 'rb') as f:
         activations = pickle.load(f)
     for label, acts in activations.items():
-        class_edim = estimate_linear_dim_PCA(acts)
+        class_edim = estimate_linear_dim_PCA(acts, 0.95)
         class_edims[label] = class_edim
     # load classwise accuracies
     with open(os.path.join(data_path, 'r50_class_accuracies.pkl'), 'rb') as f:
@@ -50,8 +50,8 @@ if __name__ == '__main__':
     sns.barplot(x=x_vals, y=y_vals)
 
     # make axis titles smaller
-    plt.xlabel('Class', fontsize=20)
-    plt.ylabel('Estimated Linear Dimension of Manifold by PCA', fontsize=20)
+    plt.xlabel('ImageNet Class and Top-1 Accuracy', fontsize=15)
+    plt.ylabel('Estimated Dimension of Manifold by PCA', fontsize=15)
     # make axis labels smaller and have a tilt
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
@@ -59,6 +59,6 @@ if __name__ == '__main__':
 
 
     plt.title('Estimated Dimension of Class Activations Manifolds for ResNet50', fontsize=30)
-    plt.savefig(f'{plot_path}/r50_class_edims.png')
+    plt.savefig(f'{plot_path}/r50_class_woof_edims.png')
 
 

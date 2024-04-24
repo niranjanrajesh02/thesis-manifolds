@@ -11,7 +11,8 @@ from torchvision.io import read_image, ImageReadMode
 import torch
 
 load_dotenv()
-data_path = os.getenv("IMAGENETTE_PATH")
+# data_path = os.getenv("IMAGENETTE_PATH")
+data_path = os.getenv("IMAGEWOOF_PATH")
 labels_path = os.getenv("IMAGENET_LABELS_PATH")
 imagenette_labels_path = os.getenv("IMAGENETTE_LABELS_PATH")
 random.seed(42)
@@ -83,7 +84,7 @@ def id_to_label(class_id):
 def index_to_label(class_index):
   print(class_index)
   labels = get_labels()
-  return [value["label"].split(",")[0] for key,value in labels.items() if int(key) == int(class_index)][0]
+  return [value["label"].split(",")[0].split(" ")[-1] for key,value in labels.items() if int(key) == int(class_index)][0]
 
 if __name__ == "__main__":
   labels = get_labels()

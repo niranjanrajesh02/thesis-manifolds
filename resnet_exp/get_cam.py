@@ -5,6 +5,12 @@ import numpy as np
 import torchvision
 import pickle
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+pickle_path = os.getenv("PICKLE_DATA_PATH")
+
 def model_evaluate(model, data):
     correct = 0
     total = 0
@@ -65,6 +71,31 @@ def get_activations(model, data):
     return  np.concatenate(activations, axis=0)
 
 
+def get_class_activations(model, class_ids, class_ids_paths):
+    class_activations = {}
+    for i in range(len(class_ids)):
+        class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
+        print("Class: ",class_label, "Index: ", class_index)
+        class_act = get_activations(r50, class_dl)
+        print(class_label, class_act.shape)
+        class_activations[class_index] = class_act
+    
+    with open(os.path.join(pickle_path, 'r50_class_activations.pkl'), 'wb') as f:
+        pickle.dump(class_activations, f)
+    return
+
+def get_class_accuracies(model, class_ids, class_ids_paths):
+    class_accuracies = {}
+    for i in range(len(class_ids)):
+        class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
+        print("Class: ",class_label, "Index: ", class_index)
+        class_acc = model_evaluate(r50, class_dl)
+        print(class_label, class_acc)
+        class_accuracies[class_index] = class_acc
+    
+    with open(os.path.join(pickle_path, './r50_class_accuracies.pkl'), 'wb') as f:
+        pickle.dump(class_accuracies, f)
+    return
 
 if __name__ == '__main__':
     class_ids, class_ids_paths = get_classes()
@@ -74,24 +105,15 @@ if __name__ == '__main__':
     print("Device: ",device)
     r50.to(device)
 
-    class_accuracies = {}
-    for i in range(len(class_ids)):
-        class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
-        print("Class: ",class_label, "Index: ", class_index)
-        class_acc = model_evaluate(r50, class_dl)
-        print(class_label, class_acc)
-        class_accuracies[class_index] = class_acc
+    get_class_activations(r50, class_ids, class_ids_paths)
+    print("Activations saved in a pickle file")
     
-    with open('./r50_class_accuracies.pkl', 'wb') as f:
-        pickle.dump(class_accuracies, f)
+    get_class_accuracies(r50, class_ids, class_ids_paths)
+    print("Accuracies saved in a pickle file")
 
-    # class_activations = {}
-    # for i in range(len(class_ids)):
-    #     class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
-    #     print("Class: ",class_label, "Index: ", class_index)
-    #     class_act = get_activations(r50, class_dl)
-    #     print(class_label, class_act.shape)
-    #     class_activations[class_index] = class_act
+
+
+
     
-    # with open('r50_class_activations.pkl', 'wb') as f:
-    #     pickle.dump(class_activations, f)
+
+    
