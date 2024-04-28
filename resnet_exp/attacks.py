@@ -1,45 +1,51 @@
 '''Need Internet Connection (don't run on remote server)'''
 
-from torchvision.models import resnet50
-from foolbox import PyTorchModel, accuracy, samples
+from foolbox import PyTorchModel
 from foolbox.attacks import LinfPGD
 import eagerpy as ep
+from get_model import load_model
+from data import get_classes, get_class_data
+import numpy as np
+import os
+import pickle
+from dotenv import load_dotenv
+
+load_dotenv()
+save_path = os.getenv("PICKLE_DATA_PATH")
+
+def setup_attack():
+  preprocessing = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], axis=-3)
+  fmodel = PyTorchModel(load_model().eval(), bounds=(0, 1), preprocessing=preprocessing)
+  attack = LinfPGD(abs_stepsize=0.01, steps=20)
+
+  return attack, fmodel
+
+def get_adv_acc(class_dl, attack, fmodel) -> float:
+  fooled = []
+  for images, labels in class_dl:
+    images, labels = ep.astensors(images, labels)
+    raw_advs, clipped_advs, success = attack(fmodel, images, labels, epsilons=[0.005])
+    fooled = np.append(fooled, success.float32().numpy()[0])
+
+  adv_acc = (1 - np.mean(fooled)) * 100
+  return adv_acc
 
 def main() -> None:
-  model = resnet50(weights='DEFAULT')
-  model.eval()
+  class_ids, class_ids_paths = get_classes(is_train=False)
+  attack, fmodel = setup_attack()
 
-  preprocessing = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], axis=-3)
-  fmodel = PyTorchModel(model, bounds=(0, 1), preprocessing=preprocessing)
+  adv_accuracies = {}
+  for i in range(len(class_ids)):
+    class_dl, class_label, class_index = get_class_data(class_ids[i], class_ids_paths[1], bs=50, transform=False)
+    adv_acc = get_adv_acc(class_dl, attack, fmodel)
+    adv_accuracies[class_index] = adv_acc
 
-  
+  print('Adv Accuracies:', adv_accuracies)
+  # save adv_accuracies as a pickle file
+  with open(save_path + 'r50_adv_accuracies.pkl', 'wb') as f:
+    pickle.dump(adv_accuracies, f)
+  print('Adv Accuracies Saved in r50_adv_accuracies.pkl')
 
-  images, labels = ep.astensors(*samples(fmodel, dataset="imagenet", batchsize=16))
-  clean_acc = accuracy(fmodel, images, labels)
-  print(f"clean accuracy:  {clean_acc * 100:.1f} %")
-
-  attack = LinfPGD()
-  epsilons = [
-        0.0,
-        0.0002,
-        0.0005,
-        0.0008,
-        0.001,
-        0.0015,
-        0.002,
-        0.003,
-        0.01,
-        0.1,
-        0.3,
-        0.5,
-        1.0,
-  ]
-  raw_advs, clipped_advs, success = attack(fmodel, images, labels, epsilons=epsilons)
-  robust_accuracy = 1 - success.float32().mean(axis=-1)
-  print("robust accuracy for perturbations with")
-
-  for eps, acc in zip(epsilons, robust_accuracy):
-      print(f"  Linf norm ≤ {eps:<6}: {acc.item() * 100:4.1f} %")
 
 if __name__ == "__main__":
    main()

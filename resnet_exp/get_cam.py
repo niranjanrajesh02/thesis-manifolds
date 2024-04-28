@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-pickle_path = os.getenv("PICKLE_DATA_PATH")
+save_path = os.getenv("PICKLE_DATA_PATH")
 
 def model_evaluate(model, data):
     correct = 0
@@ -27,7 +27,7 @@ def model_evaluate(model, data):
         correct += (predicted == labels).sum().item()
         
     acc = 100 * correct / total
-    print(acc)
+    print(f"Accuracy: {acc:.2f}%")
     return acc
 
 def get_activations(model, data):
@@ -74,41 +74,44 @@ def get_activations(model, data):
 def get_class_activations(model, class_ids, class_ids_paths):
     class_activations = {}
     for i in range(len(class_ids)):
-        class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
+        class_dl, class_label, class_index = get_class_data(class_ids[i],class_ids_paths[i])
         print("Class: ",class_label, "Index: ", class_index)
         class_act = get_activations(r50, class_dl)
         print(class_label, class_act.shape)
         class_activations[class_index] = class_act
     
-    with open(os.path.join(pickle_path, 'r50_class_activations.pkl'), 'wb') as f:
+    with open(os.path.join(save_path, 'r50_class_activations.pkl'), 'wb') as f:
         pickle.dump(class_activations, f)
     return
 
-def get_class_accuracies(model, class_ids, class_ids_paths):
+def get_class_accuracies(model, class_ids, class_ids_paths, train=True):
     class_accuracies = {}
     for i in range(len(class_ids)):
-        class_dl, class_label, class_index = get_class_data(class_ids_paths[i], class_ids[i])
+        class_dl, class_label, class_index = get_class_data(class_ids[i], class_ids_paths[i])
         print("Class: ",class_label, "Index: ", class_index)
         class_acc = model_evaluate(r50, class_dl)
         print(class_label, class_acc)
         class_accuracies[class_index] = class_acc
     
-    with open(os.path.join(pickle_path, './r50_class_accuracies.pkl'), 'wb') as f:
+   
+    with open(os.path.join(save_path, f'r50_class_{"train_" if train else "valid_"}accuracies.pkl'), 'wb') as f:
         pickle.dump(class_accuracies, f)
+
     return
 
 if __name__ == '__main__':
-    class_ids, class_ids_paths = get_classes()
+    TRAIN = True
+    class_ids, class_ids_paths = get_classes(is_train=TRAIN)
     r50 = load_model()
     r50.eval()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("Device: ",device)
     r50.to(device)
 
-    get_class_activations(r50, class_ids, class_ids_paths)
-    print("Activations saved in a pickle file")
+    # get_class_activations(r50, class_ids, class_ids_paths) #* Always train for class activations
+    # print("Activations saved in a pickle file")
     
-    get_class_accuracies(r50, class_ids, class_ids_paths)
+    get_class_accuracies(r50, class_ids, class_ids_paths, train=TRAIN)
     print("Accuracies saved in a pickle file")
 
 
