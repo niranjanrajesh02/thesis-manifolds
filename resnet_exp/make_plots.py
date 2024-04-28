@@ -10,8 +10,9 @@ from data import index_to_label
 load_dotenv()
 save_path = os.getenv("PICKLE_DATA_PATH")
 plot_path = os.getenv("PLOTS_PATH")
-def plot_class_accs():
-    with open(save_path + 'r50_class_accuracies.pkl', 'rb') as f:
+
+def plot_class_accs(data='valid'):
+    with open(save_path + f'r50_class_{data}_accuracies.pkl', 'rb') as f:
         class_accs = pickle.load(f)
     
     sns.set_theme(style="whitegrid")
@@ -31,8 +32,71 @@ def plot_class_accs():
     # plt.tight_layout()
     plt.savefig(os.path.join(plot_path, 'r50_class_accuracies.png'))
     
+def plot_class_accdiff_manifold_dim():
+    with open(save_path + f'r50_class_train_accuracies.pkl', 'rb') as f:
+        train_class_accs = pickle.load(f)
+    with open(save_path + f'r50_class_valid_accuracies.pkl', 'rb') as f:
+        valid_class_accs = pickle.load(f)
+    with open(save_path + f'r50_class_manifold_dims.pkl', 'rb') as f:
+        class_man_dims = pickle.load(f)
+    
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(12, 10))
 
+    # Sort the class accuracies by name
+    train_class_accs = dict(sorted(train_class_accs.items(), key=lambda item: item[0]))
+    valid_class_accs = dict(sorted(valid_class_accs.items(), key=lambda item: item[0]))
+    class_man_dims = dict(sorted(class_man_dims.items(), key=lambda item: item[0]))
+
+    # checking that order is the same 
+    assert train_class_accs.keys() == valid_class_accs.keys() == class_man_dims.keys()
+
+    # Calculate the difference between train and valid accuracies
+    class_diffs = {k: train_class_accs[k] - valid_class_accs[k] for k in train_class_accs.keys()}
+    
+    # merge the class diffs with the manifold dimensions
+    class_acts_diffs = {k: (class_man_dims[k], v) for k, v in class_diffs.items()}
+    class_acts_diffs = dict(sorted(class_acts_diffs.items(), key=lambda item: item[1][1]))
+
+    x_vals = [f'{index_to_label(int(cid))}\n{class_acts_diffs[cid][1]:.2f}%' for cid in class_acts_diffs.keys()]
+    y_vals = [v[0] for v in class_acts_diffs.values()]
+
+    sns.barplot(x=x_vals, y=y_vals, palette="viridis")
+    plt.ylabel('Manifold Dimension')
+    plt.xlabel('Classes and their Train-Valid Accuracy Difference')
+    plt.title('ResNet50 Train-Valid Accuracy Difference per Class')
+    plt.savefig(os.path.join(plot_path, 'r50_class_accdiff_manifold_dim.png'))
+
+
+def plot_class_acc_manifold_dim(data='valid'):
+    with open(save_path + f'r50_class_{data}_accuracies.pkl', 'rb') as f:
+        class_accs = pickle.load(f)
+    with open(save_path + f'r50_class_manifold_dims.pkl', 'rb') as f:
+        class_man_dims = pickle.load(f)
+      
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(12, 8))
+
+    # Sort the class accuracies by name
+    class_accs = dict(sorted(class_accs.items(), key=lambda item: item[0]))
+    class_man_dims = dict(sorted(class_man_dims.items(), key=lambda item: item[0]))
+    assert class_accs.keys() == class_man_dims.keys()
+
+    plot_dict = {k: (acc, class_man_dims[k]) for k, acc in class_accs.items()}
+    plot_dict = dict(sorted(plot_dict.items(), key=lambda item: item[1][0], reverse=True))
+
+    x_vals = [f'{index_to_label(int(cid))}\n{plot_dict[cid][0]:.2f}%' for cid in plot_dict.keys()]
+    y_vals = [v[1] for v in plot_dict.values()]
+
+    sns.barplot(x=x_vals, y=y_vals, palette="viridis")
+    plt.ylabel('Manifold Dimension')
+    plt.xlabel('Classes and their Top-1 Accuracy')
+    plt.title(f'ResNet50 Top-1 {data.capitalize()} Accuracy and Manifold Dimension per Class')
+    plt.savefig(os.path.join(plot_path, f'r50_class_acc_manifold_dim_{data}.png'))
+    return
 
 
 if __name__ == '__main__':
-    plot_class_accs()
+    # plot_class_accs()
+    # plot_class_accdiff_manifold_dim()
+    plot_class_acc_manifold_dim('train')

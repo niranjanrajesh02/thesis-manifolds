@@ -73,6 +73,15 @@ def get_classes(is_train=True):
     new_data_path = os.path.join(DATA_PATH, "train")
   else:
     new_data_path = os.path.join(DATA_PATH, "val")
+  # total images found in all classes
+  total_images = 0
+  data = "Train" if is_train else "Val"
+  print(f"Getting {data} Images...")
+  for class_id in os.listdir(new_data_path):
+    class_path = os.path.join(new_data_path, class_id)
+    class_images = os.listdir(class_path)
+    print(f"{id_to_label(class_id)}: {len(class_images)}")
+    total_images += len(class_images)
   class_ids = os.listdir(new_data_path)
   class_ids_paths = [os.path.join(new_data_path, class_id) for class_id in class_ids]
   return class_ids, class_ids_paths
@@ -93,14 +102,14 @@ def index_to_label(class_index):
 if __name__ == "__main__":
   labels = get_labels()
   # print(labels)
-  class_ids, class_ids_paths= get_classes()
+  class_ids, class_ids_paths= get_classes(is_train=False)
   # compute label key when label[key]["id"] == class_id
-  print(class_ids[1])
-  class_ind = id_to_index(class_ids[1])
-  class_label = id_to_label(class_ids[1])
-  print(class_ids[1], class_ind, class_label, class_ids_paths[1])
-  class_data = get_class_data(class_ids_paths[1], class_ids[1])
-  print(class_data)
+  # print(class_ids[1])
+  # class_ind = id_to_index(class_ids[1])
+  # class_label = id_to_label(class_ids[1])
+  # print(class_ids[1], class_ind, class_label, class_ids_paths[1])
+  # class_data = get_class_data(class_ids_paths[1], class_ids[1])
+  # print(class_data)
   
 
 

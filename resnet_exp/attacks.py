@@ -20,11 +20,11 @@ def setup_attack():
 
   return attack, fmodel
 
-def get_adv_acc(class_dl, attack, fmodel) -> float:
+def get_adv_acc(class_dl, attack, fmodel, eps) -> float:
   fooled = []
   for images, labels in class_dl:
     images, labels = ep.astensors(images, labels)
-    raw_advs, clipped_advs, success = attack(fmodel, images, labels, epsilons=[0.005])
+    raw_advs, clipped_advs, success = attack(fmodel, images, labels, epsilons=[eps])
     fooled = np.append(fooled, success.float32().numpy()[0])
 
   adv_acc = (1 - np.mean(fooled)) * 100
@@ -34,11 +34,14 @@ def main() -> None:
   class_ids, class_ids_paths = get_classes(is_train=False)
   attack, fmodel = setup_attack()
 
+  epsilons = [0, 0.0002,0.0005,0.001]
   adv_accuracies = {}
   for i in range(len(class_ids)):
     class_dl, class_label, class_index = get_class_data(class_ids[i], class_ids_paths[1], bs=50, transform=False)
-    adv_acc = get_adv_acc(class_dl, attack, fmodel)
-    adv_accuracies[class_index] = adv_acc
+    adv_accuracies[class_index] = []
+    for eps in epsilons:
+      adv_acc = get_adv_acc(class_dl, attack, fmodel, eps)
+      adv_accuracies[class_index].append(adv_acc) 
 
   print('Adv Accuracies:', adv_accuracies)
   # save adv_accuracies as a pickle file
