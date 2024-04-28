@@ -37,7 +37,7 @@ def main() -> None:
   epsilons = [0, 0.0002,0.0005,0.001]
   adv_accuracies = {}
   for i in range(len(class_ids)):
-    class_dl, class_label, class_index = get_class_data(class_ids[i], class_ids_paths[1], bs=50, transform=False)
+    class_dl, class_label, class_index = get_class_data(class_ids[i], class_ids_paths[i], bs=50, transform=False)
     adv_accuracies[class_index] = []
     for eps in epsilons:
       adv_acc = get_adv_acc(class_dl, attack, fmodel, eps)

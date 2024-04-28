@@ -6,6 +6,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from data import index_to_label
+import pandas as pd
 
 load_dotenv()
 save_path = os.getenv("PICKLE_DATA_PATH")
@@ -48,22 +49,26 @@ def plot_class_accdiff_manifold_dim():
     valid_class_accs = dict(sorted(valid_class_accs.items(), key=lambda item: item[0]))
     class_man_dims = dict(sorted(class_man_dims.items(), key=lambda item: item[0]))
 
+
+
     # checking that order is the same 
     assert train_class_accs.keys() == valid_class_accs.keys() == class_man_dims.keys()
 
     # Calculate the difference between train and valid accuracies
     class_diffs = {k: train_class_accs[k] - valid_class_accs[k] for k in train_class_accs.keys()}
+
+    class_labels = [index_to_label(int(cid)) for cid in class_diffs.keys()]
+    # make a df with the class, manifold dim, and diff and sort it based on diff
+    df = pd.DataFrame({'class': class_labels, 'manifold_dim': list(class_man_dims.values()), 'diff': list(class_diffs.values())})
+    df = df.sort_values(by='diff', ascending=True)
     
-    # merge the class diffs with the manifold dimensions
-    class_acts_diffs = {k: (class_man_dims[k], v) for k, v in class_diffs.items()}
-    class_acts_diffs = dict(sorted(class_acts_diffs.items(), key=lambda item: item[1][1]))
-
-    x_vals = [f'{index_to_label(int(cid))}\n{class_acts_diffs[cid][1]:.2f}%' for cid in class_acts_diffs.keys()]
-    y_vals = [v[0] for v in class_acts_diffs.values()]
-
-    sns.barplot(x=x_vals, y=y_vals, palette="viridis")
+    # add a column for the x axis labels
+    df['x_labels'] = df['class'] + '\n' + df['diff'].map('{:.2f}%'.format)
+    
+    sns.barplot(data=df, x='x_labels', y='manifold_dim', hue='class')
+    # bar plot x axis labels
     plt.ylabel('Manifold Dimension')
-    plt.xlabel('Classes and their Train-Valid Accuracy Difference')
+    plt.xlabel('Classes')
     plt.title('ResNet50 Train-Valid Accuracy Difference per Class')
     plt.savefig(os.path.join(plot_path, 'r50_class_accdiff_manifold_dim.png'))
 
@@ -95,8 +100,13 @@ def plot_class_acc_manifold_dim(data='valid'):
     plt.savefig(os.path.join(plot_path, f'r50_class_acc_manifold_dim_{data}.png'))
     return
 
+def plot_adv_acc():
+    with open(save_path + 'r50_adv_accuracies.pkl', 'rb') as f:
+        adv_accs = pickle.load(f)
+    print(adv_accs)
 
 if __name__ == '__main__':
     # plot_class_accs()
     # plot_class_accdiff_manifold_dim()
-    plot_class_acc_manifold_dim('train')
+    # plot_class_acc_manifold_dim('train')
+    plot_adv_acc()

@@ -13,6 +13,7 @@ from torchvision.models import ResNet50_Weights
 
 load_dotenv()
 DATA_PATH = os.getenv("IMAGENETTE_PATH")
+
 # DATA_PATH = os.getenv("IMAGEWOOF_PATH")
 labels_path = os.getenv("IMAGENET_LABELS_PATH")
 imagenette_labels_path = os.getenv("IMAGENETTE_LABELS_PATH")
