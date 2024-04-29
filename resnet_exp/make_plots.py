@@ -34,7 +34,6 @@ def plot_class_accs(data='valid'):
     # change font size
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.title(fontsize=16)
 
     # plt.tight_layout()
     plt.savefig(os.path.join(plot_path, 'r50_class_accuracies.png'))
@@ -55,8 +54,6 @@ def plot_class_accdiff_manifold_dim():
     valid_class_accs = dict(sorted(valid_class_accs.items(), key=lambda item: item[0]))
     class_man_dims = dict(sorted(class_man_dims.items(), key=lambda item: item[0]))
 
-
-
     # checking that order is the same 
     assert train_class_accs.keys() == valid_class_accs.keys() == class_man_dims.keys()
 
@@ -71,7 +68,7 @@ def plot_class_accdiff_manifold_dim():
     # add a column for the x axis labels
     df['x_labels'] = df['class'] + '\n' + df['diff'].map('{:.2f}%'.format)
     
-    sns.barplot(data=df, x='x_labels', y='manifold_dim', hue='class')
+    sns.barplot(data=df, x='x_labels', y='manifold_dim')
     # bar plot x axis labels
     plt.ylabel('Manifold Dimension')
     plt.xlabel('Classes')
@@ -111,8 +108,42 @@ def plot_adv_acc():
         adv_accs = pickle.load(f)
     print(adv_accs)
 
+    with open(save_path + 'r50_class_manifold_dims.pkl', 'rb') as f:
+        cam_dims = pickle.load(f)
+
+
+    # Sort the class accuracies by class name
+    adv_accs = dict(sorted(adv_accs.items(), key=lambda item: item[0]))
+    cam_dims = dict(sorted(cam_dims.items(), key=lambda item: item[0]))
+    assert adv_accs.keys() == cam_dims.keys()
+    class_labels = [index_to_label(int(cid)) for cid in adv_accs.keys()]
+    plot_df = pd.DataFrame({'class': class_labels, 'adv_acc': list(adv_accs.values()), 'cam_dim': list(cam_dims.values())})
+    
+    epsilons = [0, 0.0002,0.0005,0.001]
+    # split adv_acc into 4 columns and name them based on the epsilon
+    for i, eps in enumerate(epsilons):
+        plot_df[f'adv_acc_{eps}'] = plot_df['adv_acc'].apply(lambda x: x[i])
+
+    plot_df = plot_df.drop(columns=['adv_acc'])
+
+
+    print(plot_df)
+
+    for eps in epsilons:
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(12, 8))
+        plot_df[f'x_labels_{eps}'] = plot_df['class'] + '\n' + plot_df[f'adv_acc_{eps}'].map('{:.2f}%'.format)
+        plot_df = plot_df.sort_values(by=f'adv_acc_{eps}', ascending=False)
+        sns.barplot(data=plot_df, x=f'x_labels_{eps}', y='cam_dim')
+        plt.ylabel('CAM Dimension')
+        plt.xlabel('Classes and their Adversarial Accuracy')
+        plt.title(f'ResNet50 Adversarial Accuracy and CAM Dimension per Class for eps={eps}')
+        plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim_{eps}.png'))
+
+    return
+
 if __name__ == '__main__':
-    plot_class_accs()
+    # plot_class_accs()
     # plot_class_accdiff_manifold_dim()
     # plot_class_acc_manifold_dim('train')
-    # plot_adv_acc()
+    plot_adv_acc()
