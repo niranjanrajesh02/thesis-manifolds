@@ -2,4 +2,9 @@
 ## Thesis Topic: Investigating Neural Manifold Dimensionality in CNNs
 
 ### ```trial_run/```
-This directory contains my initial attempts to extract activations of CNNs on a CIFAR10 dataset and estimate the dimensionality of the manifold they create.
+This directory contains my initial attempts to extract activations of CNNs on a CIFAR10 dataset and estimate the dimensionality of the manifold they create. This was written in TensorFlow
+
+### ```resnet_exp/```
+This directory contains the code, plots and data for experiments on an Imagenet-Pretrained Resnet50. 
+
+

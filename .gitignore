@@ -1,4 +1,5 @@
 */logs
+*/eval_logs
 */results
 */__pycache__
 .env

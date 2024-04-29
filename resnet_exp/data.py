@@ -10,9 +10,9 @@ import cv2
 from torchvision.io import read_image, ImageReadMode
 import torch
 from torchvision.models import ResNet50_Weights
-
+import numpy as np
 load_dotenv()
-DATA_PATH = os.getenv("IMAGENETTE_PATH")
+
 
 # DATA_PATH = os.getenv("IMAGEWOOF_PATH")
 labels_path = os.getenv("IMAGENET_LABELS_PATH")
@@ -69,22 +69,34 @@ def get_class_data(class_id, class_path, bs=1, transform=True):
   class_dl = DataLoader(class_ds, batch_size=bs, shuffle=False)
   return class_dl, class_label, class_index
 
-def get_classes(is_train=True):
+def get_classes(is_train=True, both=False):
+  DATA_PATH = os.getenv("IMAGENETTE_PATH")
+  if both:
+    DATA2_PATH = os.getenv("IMAGEWOOF_PATH")
+  
   if is_train:
     new_data_path = os.path.join(DATA_PATH, "train")
   else:
     new_data_path = os.path.join(DATA_PATH, "val")
   # total images found in all classes
-  total_images = 0
+  
   data = "Train" if is_train else "Val"
   print(f"Getting {data} Images...")
-  for class_id in os.listdir(new_data_path):
-    class_path = os.path.join(new_data_path, class_id)
-    class_images = os.listdir(class_path)
-    print(f"{id_to_label(class_id)}: {len(class_images)}")
-    total_images += len(class_images)
+  
   class_ids = os.listdir(new_data_path)
   class_ids_paths = [os.path.join(new_data_path, class_id) for class_id in class_ids]
+
+  if both:
+    if is_train:
+      new_data2_path = os.path.join(DATA2_PATH, "train")
+    else:
+      new_data2_path = os.path.join(DATA2_PATH, "val")
+
+    class_ids2 = os.listdir(new_data2_path)
+    class_ids_paths2 = [os.path.join(new_data2_path, class_id) for class_id in class_ids2]
+    class_ids = np.append(class_ids,class_ids2).tolist()
+    class_ids_paths = np.append(class_ids_paths, class_ids_paths2).tolist()
+  
   return class_ids, class_ids_paths
 
 def id_to_index(class_id):
@@ -103,7 +115,10 @@ def index_to_label(class_index):
 if __name__ == "__main__":
   labels = get_labels()
   # print(labels)
-  class_ids, class_ids_paths= get_classes(is_train=False)
+  class_ids, class_ids_paths= get_classes(is_train=False, both=True)
+  print(class_ids.shape)
+  print(class_ids_paths.shape)
+
   # compute label key when label[key]["id"] == class_id
   # print(class_ids[1])
   # class_ind = id_to_index(class_ids[1])

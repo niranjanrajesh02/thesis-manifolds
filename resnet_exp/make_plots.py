@@ -15,20 +15,26 @@ plot_path = os.getenv("PLOTS_PATH")
 def plot_class_accs(data='valid'):
     with open(save_path + f'r50_class_{data}_accuracies.pkl', 'rb') as f:
         class_accs = pickle.load(f)
-    
     sns.set_theme(style="whitegrid")
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(16, 12))
     
     # Sort the class accuracies by value descending
     class_accs = dict(sorted(class_accs.items(), key=lambda item: item[1], reverse=True))
     print(class_accs)
     x_vals = [index_to_label(int(cid))for cid in class_accs.keys()]
+    # if any x_val is repeated, add 2 to one of the repeated labels
+    if 'terrier' in x_vals:
+        x_vals[x_vals.index('terrier')] = 'terrier 0'
     y_vals = [acc for acc in class_accs.values()]
 
     sns.barplot(x=x_vals, y=y_vals, palette="viridis")
-    plt.xticks(rotation=30)
-    plt.ylabel('Top-1 Accuracy')
+    plt.xticks(rotation=60)
+    plt.ylabel('Top-1 Accuracy', fontsize=14)
     plt.title('ResNet50 Top-1 Accuracy per Class')
+    # change font size
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title(fontsize=16)
 
     # plt.tight_layout()
     plt.savefig(os.path.join(plot_path, 'r50_class_accuracies.png'))
@@ -106,7 +112,7 @@ def plot_adv_acc():
     print(adv_accs)
 
 if __name__ == '__main__':
-    # plot_class_accs()
+    plot_class_accs()
     # plot_class_accdiff_manifold_dim()
     # plot_class_acc_manifold_dim('train')
-    plot_adv_acc()
+    # plot_adv_acc()

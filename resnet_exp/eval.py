@@ -5,6 +5,7 @@ import pickle
 import os
 import dotenv
 from get_model import load_model
+import argparse
 
 dotenv.load_dotenv()
 save_path = os.getenv("PICKLE_DATA_PATH")
@@ -38,6 +39,7 @@ def get_class_accuracies(model, class_ids, class_ids_paths, train=True):
         print(class_label, class_acc)
         class_accuracies[class_index] = class_acc
     
+    print(class_accuracies)
    
     with open(os.path.join(save_path, f'r50_class_{"train_" if train else "valid_"}accuracies.pkl'), 'wb') as f:
         pickle.dump(class_accuracies, f)
@@ -46,11 +48,15 @@ def get_class_accuracies(model, class_ids, class_ids_paths, train=True):
 
 
 if __name__ == "__main__":
+      
         r50 = load_model()
         r50.eval()
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print("Device: ",device)
         r50.to(device)  
-        class_ids, class_ids_paths = get_classes(is_train=False)
+
+        class_ids, class_ids_paths = get_classes(is_train=False, both=True)
+        print("Class IDs: ", class_ids)
+        print("Class Paths: ", class_ids_paths)
         get_class_accuracies(r50, class_ids, class_ids_paths, train=False)
         print("Accuracies saved in a pickle file")
