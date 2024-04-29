@@ -55,7 +55,7 @@ if __name__ == "__main__":
         print("Device: ",device)
         r50.to(device)  
 
-        class_ids, class_ids_paths = get_classes(is_train=False, both=True)
+        class_ids, class_ids_paths = get_classes(is_train=False)
         print("Class IDs: ", class_ids)
         print("Class Paths: ", class_ids_paths)
         get_class_accuracies(r50, class_ids, class_ids_paths, train=False)

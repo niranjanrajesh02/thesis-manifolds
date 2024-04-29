@@ -69,35 +69,47 @@ def get_class_data(class_id, class_path, bs=1, transform=True):
   class_dl = DataLoader(class_ds, batch_size=bs, shuffle=False)
   return class_dl, class_label, class_index
 
-def get_classes(is_train=True, both=False):
-  DATA_PATH = os.getenv("IMAGENETTE_PATH")
-  if both:
-    DATA2_PATH = os.getenv("IMAGEWOOF_PATH")
-  
-  if is_train:
-    new_data_path = os.path.join(DATA_PATH, "train")
-  else:
-    new_data_path = os.path.join(DATA_PATH, "val")
-  # total images found in all classes
-  
+def get_classes(is_train=True, imgnet='imagenette', rand_subset=50):
   data = "Train" if is_train else "Val"
   print(f"Getting {data} Images...")
-  
-  class_ids = os.listdir(new_data_path)
-  class_ids_paths = [os.path.join(new_data_path, class_id) for class_id in class_ids]
-
-  if both:
+  if imgnet == 'imagenette':
+    DATA_PATH = os.getenv("IMAGENETTE_PATH")
     if is_train:
-      new_data2_path = os.path.join(DATA2_PATH, "train")
+      data_path = os.path.join(DATA_PATH, "train")
     else:
-      new_data2_path = os.path.join(DATA2_PATH, "val")
+      data_path = os.path.join(DATA_PATH, "val")
+    class_ids = os.listdir(data_path)
+    class_ids_paths = [os.path.join(data_path, class_id) for class_id in class_ids]
 
-    class_ids2 = os.listdir(new_data2_path)
-    class_ids_paths2 = [os.path.join(new_data2_path, class_id) for class_id in class_ids2]
-    class_ids = np.append(class_ids,class_ids2).tolist()
-    class_ids_paths = np.append(class_ids_paths, class_ids_paths2).tolist()
+  elif imgnet == 'imagenet':
+    DATA_PATH = os.getenv("IMAGENET_PATH")
+    data_path = DATA_PATH # TODO change this to train or val 
+    class_ids = os.listdir(data_path)
+    class_ids_paths = [os.path.join(data_path, class_id) for class_id in class_ids]
+
+    if rand_subset:
+      # sample random indices for both class_ids and class_ids_paths
+      rand_indices = random.sample(range(len(class_ids)), rand_subset)
+      sub_class_ids = [class_ids[i] for i in rand_indices]
+      sub_class_ids_paths = [class_ids_paths[i] for i in rand_indices]
+
+
+      # sanity checks to ensure that order is maintained
+      assert len(sub_class_ids) == len(sub_class_ids_paths)
+      rand_ind = random.randint(0, len(sub_class_ids)-1)
+      id = sub_class_ids[rand_ind] 
+      # find index of id in class_ids
+      index = class_ids.index(id)
+      assert sub_class_ids_paths[rand_ind] == class_ids_paths[index]
+
+      return sub_class_ids, sub_class_ids_paths
+
+    else:
+      return class_ids, class_ids_paths
+      
   
-  return class_ids, class_ids_paths
+  
+
 
 def id_to_index(class_id):
   labels = get_labels()
@@ -113,22 +125,9 @@ def index_to_label(class_index):
   return [value["label"].split(",")[0].split(" ")[-1] for key,value in labels.items() if int(key) == int(class_index)][0]
 
 if __name__ == "__main__":
-  labels = get_labels()
-  # print(labels)
-  class_ids, class_ids_paths= get_classes(is_train=False, both=True)
-  print(class_ids.shape)
-  print(class_ids_paths.shape)
-
-  # compute label key when label[key]["id"] == class_id
-  # print(class_ids[1])
-  # class_ind = id_to_index(class_ids[1])
-  # class_label = id_to_label(class_ids[1])
-  # print(class_ids[1], class_ind, class_label, class_ids_paths[1])
-  # class_data = get_class_data(class_ids_paths[1], class_ids[1])
-  # print(class_data)
-  
-
-
+  class_ids, class_ids_paths= get_classes(is_train=False, imgnet='imagenet', rand_subset=50)
+  print("Length of class_ids: ", len(class_ids))
+  print("Length of class_ids_paths: ", len(class_ids_paths))
 
 
 
