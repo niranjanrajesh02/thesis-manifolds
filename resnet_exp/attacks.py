@@ -51,7 +51,7 @@ def main(class_ids, class_ids_paths) -> None:
   file_name = f'r50_adv_accuracies_{len(class_ids)}c.pkl'
   with open(os.path.join(save_path, file_name), 'wb') as f:
     pickle.dump(adv_accuracies, f)
-  print(f'Adv Accuracies Saved in {file_name}.pkl')
+  print(f'Adv Accuracies Saved in {file_name}')
 
 
 if __name__ == "__main__":

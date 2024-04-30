@@ -89,6 +89,7 @@ def get_classes(is_train=True, imgnet='imagenette', rand_subset=50):
 
     if rand_subset:
       # sample random indices for both class_ids and class_ids_paths
+      random.seed(42)
       rand_indices = random.sample(range(len(class_ids)), rand_subset)
       sub_class_ids = [class_ids[i] for i in rand_indices]
       sub_class_ids_paths = [class_ids_paths[i] for i in rand_indices]
@@ -107,7 +108,7 @@ def get_classes(is_train=True, imgnet='imagenette', rand_subset=50):
     else:
       return class_ids, class_ids_paths
       
-  
+
   
 
 

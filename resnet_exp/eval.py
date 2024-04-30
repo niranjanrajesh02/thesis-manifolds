@@ -38,7 +38,6 @@ def get_class_accuracies(model, class_ids, class_ids_paths, train=True):
         class_acc = model_evaluate(model, class_dl)
         print(class_label, class_acc)
         class_accuracies[class_index] = class_acc
-    
     print(class_accuracies)
    
     with open(os.path.join(save_path, f'r50_class_{"train_" if train else "valid_"}accuracies.pkl'), 'wb') as f:

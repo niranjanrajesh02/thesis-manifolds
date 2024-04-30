@@ -7,6 +7,7 @@ import seaborn as sns
 import pandas as pd
 from data import index_to_label
 import pandas as pd
+from scipy.stats import pearsonr, spearmanr
 
 load_dotenv()
 save_path = os.getenv("PICKLE_DATA_PATH")
@@ -111,7 +112,6 @@ def plot_adv_acc():
     with open(save_path + 'r50_class_manifold_dims.pkl', 'rb') as f:
         cam_dims = pickle.load(f)
 
-
     # Sort the class accuracies by class name
     adv_accs = dict(sorted(adv_accs.items(), key=lambda item: item[0]))
     cam_dims = dict(sorted(cam_dims.items(), key=lambda item: item[0]))
@@ -137,13 +137,72 @@ def plot_adv_acc():
         sns.barplot(data=plot_df, x=f'x_labels_{eps}', y='cam_dim')
         plt.ylabel('CAM Dimension')
         plt.xlabel('Classes and their Adversarial Accuracy')
-        plt.title(f'ResNet50 Adversarial Accuracy and CAM Dimension per Class for eps={eps}')
+        plt.title(f'R50 Adversarial Accuracy and CAM Dimension per Class for eps={eps}')
+    
         plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim_{eps}.png'))
 
     return
+
+def plot_adv_acc_manifold_dim(n_classes=10, all_eps=False):
+    ext = f'_{n_classes}' if n_classes != 10 else ''
+
+    with open(save_path + f'r50_adv_accuracies{ext}c.pkl', 'rb') as f:
+        adv_accs = pickle.load(f)
+    print(adv_accs)
+
+    with open(save_path + f'r50_class_manifold_dims{ext}.pkl', 'rb') as f:
+        cam_dims = pickle.load(f)
+    
+    # Sort the class accuracies by class name
+    adv_accs = dict(sorted(adv_accs.items(), key=lambda item: item[0]))
+    cam_dims = dict(sorted(cam_dims.items(), key=lambda item: item[0]))
+
+    assert adv_accs.keys() == cam_dims.keys()
+
+    class_labels = [index_to_label(int(cid)) for cid in adv_accs.keys()]
+    plot_df = pd.DataFrame({'class': class_labels, 'adv_acc': list(adv_accs.values()), 'cam_dim': list(cam_dims.values())})
+
+    epsilons = [0, 0.0002,0.0005,0.002, 0.005]
+    # split adv_acc into 4 columns and name them based on the epsilon
+    for i, eps in enumerate(epsilons):
+        plot_df[f'adv_acc_{eps}'] = plot_df['adv_acc'].apply(lambda x: x[i])
+    plot_df = plot_df.drop(columns=['adv_acc'])
+
+    print(plot_df.keys())
+
+    if all_eps:
+        for eps in epsilons:
+            sns.set_theme(style="whitegrid")
+            plt.figure(figsize=(12, 8))
+            sns.scatterplot(data=plot_df, x=f'adv_acc_{eps}', y='cam_dim', hue='class')
+            # legend off
+            plt.legend([],[], frameon=False)
+            plt.ylabel('CAM Dimension')
+            plt.xlabel('Adversarial Accuracy (%)')
+            plt.title(f'ResNet50 Adversarial Accuracy and CAM Dimension per Class for eps={eps}')
+            plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim{ext}c_{eps}.png'))
+    
+    else:
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(12, 8))
+        eps = 0.005        
+        sns.scatterplot(data=plot_df, x=f'adv_acc_{str(eps)}', y='cam_dim', hue='class', )
+        # legend off
+        plt.legend([],[], frameon=False)
+        plt.ylabel('CAM Dimension')
+        plt.xlabel('Adversarial Accuracy (%)')
+        plt.title(f'R50 Adversarial Accuracy and CAM Dimension per Class for eps={str(eps)}', fontsize=16, pad=20)
+
+        corr_coeff,p = pearsonr(plot_df[f'adv_acc_{str(eps)}'], plot_df['cam_dim'])
+        plt.suptitle(f'Pearson: {corr_coeff:.3f} p={float(p):.2e}', fontsize=14, y=0.90)
+        plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim{ext}c.png'))
+        
+        
+        
 
 if __name__ == '__main__':
     # plot_class_accs()
     # plot_class_accdiff_manifold_dim()
     # plot_class_acc_manifold_dim('train')
-    plot_adv_acc()
+    # plot_adv_acc() 
+    plot_adv_acc_manifold_dim(50, all_eps=False)
