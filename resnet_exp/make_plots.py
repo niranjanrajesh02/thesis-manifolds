@@ -183,21 +183,24 @@ def plot_adv_acc_manifold_dim(n_classes=10, all_eps=False):
             plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim{ext}c_{eps}.png'))
     
     else:
-        sns.set_theme(style="whitegrid")
-        plt.figure(figsize=(12, 8))
-        eps = 0.005        
-        sns.scatterplot(data=plot_df, x=f'adv_acc_{str(eps)}', y='cam_dim', hue='class', )
+        sns.set_theme(style="darkgrid", rc={'figure.figsize':(11.7,8.27)})
+        
+        # plt.figure(figsize=(12, 8))
+        eps = 0.002      
+        # round to nearest 5
+        plot_df['rounded_acc'] = plot_df[f'adv_acc_{str(eps)}'].apply(lambda x: round(x, -1))
+        rel = sns.relplot(data=plot_df, x=f'rounded_acc', y='cam_dim', kind='line')
         # legend off
-        plt.legend([],[], frameon=False)
-        plt.ylabel('CAM Dimension')
-        plt.xlabel('Adversarial Accuracy (%)')
-        plt.title(f'R50 Adversarial Accuracy and CAM Dimension per Class for eps={str(eps)}', fontsize=16, pad=20)
-
+        # plt.legend([],[], frameon=False)
+        rel.set_axis_labels('Adversarial Accuracy (%)', 'CAM Dimension')
+        rel.set_titles(f'R50 Adversarial Accuracy and CAM Dimension per Class for eps={str(eps)}')
+    
         corr_coeff,p = pearsonr(plot_df[f'adv_acc_{str(eps)}'], plot_df['cam_dim'])
-        plt.suptitle(f'Pearson: {corr_coeff:.3f} p={float(p):.2e}', fontsize=14, y=0.90)
-        plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim{ext}c.png'))
-        
-        
+        # rel.suptitle(f'Pearson: {corr_coeff:.3f} p={float(p):.2e}', fontsize=14, y=0.90)
+        # plt.suptitle(f'Pearson: {corr_coeff:.3f} p={float(p):.2e}', fontsize=14, y=0.90)
+        plt.savefig(os.path.join(plot_path, f'r50_adv_acc_cam_dim{ext}c2.png'))
+
+    return    
         
 
 if __name__ == '__main__':
@@ -205,4 +208,4 @@ if __name__ == '__main__':
     # plot_class_accdiff_manifold_dim()
     # plot_class_acc_manifold_dim('train')
     # plot_adv_acc() 
-    plot_adv_acc_manifold_dim(50, all_eps=False)
+    plot_adv_acc_manifold_dim(100, all_eps=False)

@@ -83,6 +83,11 @@ def get_classes(is_train=True, imgnet='imagenette', rand_subset=50):
 
   elif imgnet == 'imagenet':
     DATA_PATH = os.getenv("IMAGENET_PATH")
+    if is_train:
+      data_path = os.path.join(DATA_PATH, "train")
+    else:
+      data_path = os.path.join(DATA_PATH, "val")
+
     data_path = DATA_PATH # TODO change this to train or val 
     class_ids = os.listdir(data_path)
     class_ids_paths = [os.path.join(data_path, class_id) for class_id in class_ids]
