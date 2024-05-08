@@ -61,7 +61,6 @@ class CAMdataset(Dataset):
 
     return image, self.class_index
 
-
 def get_class_data(class_id, class_path, bs=1, transform=True):
   class_index = id_to_index(class_id)
   class_label = id_to_label(class_id)
@@ -88,7 +87,6 @@ def get_classes(is_train=True, imgnet='imagenette', rand_subset=50):
     else:
       data_path = os.path.join(DATA_PATH, "val")
 
-    data_path = DATA_PATH # TODO change this to train or val 
     class_ids = os.listdir(data_path)
     class_ids_paths = [os.path.join(data_path, class_id) for class_id in class_ids]
 
@@ -129,6 +127,27 @@ def index_to_label(class_index):
   # print(class_index)
   labels = get_labels()
   return [value["label"].split(",")[0].split(" ")[-1] for key,value in labels.items() if int(key) == int(class_index)][0]
+
+
+
+
+def load_cifar_data():
+  cifar_path = os.getenv("CIFAR_PATH")
+  train_path = os.path.join(cifar_path, "train")
+  test_path = os.path.join(cifar_path, "test")
+
+  # returns (x_train, y_train), (x_test, y_test) as np arrays of images and labels from train and test paths
+  train_ds = pd.read_pickle(train_path, compression=None)
+  test_ds = pd.read_pickle(test_path, compression=None)
+
+  
+
+
+
+
+  return train_ds, test_ds
+
+
 
 if __name__ == "__main__":
   class_ids, class_ids_paths= get_classes(is_train=False, imgnet='imagenet', rand_subset=50)

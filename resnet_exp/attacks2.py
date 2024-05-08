@@ -8,7 +8,6 @@ import os
 import pickle
 from dotenv import load_dotenv
 import argparse
-from my_utils import model_namer
 
 load_dotenv()
 save_path = os.getenv("PICKLE_DATA_PATH")
@@ -36,7 +35,7 @@ def main(class_ids, class_ids_paths, many_models=False) -> None:
   epsilons = [0,0.0005,0.005]
 
   if many_models:
-    models = ["ResNet50"]
+    models = ["DenseNet"]
 
     for model in models:
       print(f"Running Attacks for {model} ...")
@@ -52,8 +51,8 @@ def main(class_ids, class_ids_paths, many_models=False) -> None:
           adv_acc = get_adv_acc(class_dl, attack, fmodel, eps)
           adv_accuracies[class_index].append(adv_acc)
       
-      mn = model_namer(model)
-      file_name = f'{mn}_adv_accuracies_{len(class_ids)}c2.pkl'
+      mn = model.lower()[:3]
+      file_name = f'{mn}_adv_accuracies_{len(class_ids)}c.pkl'
       with open(os.path.join(save_path, file_name), 'wb') as f:
         pickle.dump(adv_accuracies, f)
 
